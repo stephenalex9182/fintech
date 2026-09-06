@@ -1,0 +1,26 @@
+- [x] Initialize project structure (Backend & Frontend)
+- [x] Create `docker-compose.yml` for PostgreSQL, Redis, Backend, Frontend
+- [x] Setup Backend Foundation
+  - [x] `requirements.txt` and `Dockerfile`
+  - [x] `config.py` for environment variables
+  - [x] `database.py` (SQLAlchemy & Redis)
+  - [x] `models.py` & `schemas.py` (Users, Portfolio, Analysis)
+  - [x] `auth.py` (JWT Authentication)
+- [x] Implement Financial Services
+  - [x] `stock_api.py` (Market data fetching)
+  - [x] `technical_analysis.py` (Indicators using pandas)
+  - [x] `sentiment.py` (Transformer-based sentiment)
+- [x] Build LangGraph Agent
+  - [x] `tools.py` (Wrap services as LangChain tools)
+  - [x] `workflow.py` (Define LangGraph state machine)
+- [x] Build FastAPI Routes
+  - [x] `auth_routes.py` (Login/Register)
+  - [x] `endpoints.py` (Agent query, portfolio, data)
+  - [x] `main.py` (App entrypoint & CORS)
+- [x] Setup Frontend (Next.js) Skeleton
+  - [x] `package.json` & `Dockerfile`
+  - [x] Landing/How it runs page
+  - [x] Login interface
+  - [x] Dashboard layout
+- [x] Create `README.md` with setup and run instructions
+- [x] Verify build and provide walkthrough
