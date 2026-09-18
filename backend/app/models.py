@@ -32,3 +32,16 @@ class PortfolioHolding(Base):
     average_buy_price = Column(Float)
     
     portfolio = relationship("Portfolio", back_populates="holdings")
+
+class FundamentalData(Base):
+    __tablename__ = "fundamental_data"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, unique=True, index=True)
+    pe_ratio = Column(Float, nullable=True)
+    debt_to_equity = Column(Float, nullable=True)
+    revenue_growth = Column(Float, nullable=True)
+    profit_margins = Column(Float, nullable=True)
+    free_cashflow = Column(Float, nullable=True)
+    beta = Column(Float, nullable=True)
+    last_updated = Column(DateTime, default=datetime.utcnow)
