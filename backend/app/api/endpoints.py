@@ -6,7 +6,9 @@ from ..services.stock_api import get_stock_data
 from ..services.fundamental_analysis import get_fundamental_data
 from ..services.multi_asset_analysis import analyze_multiple_assets
 from ..services.risk_analysis import calculate_portfolio_risk
-
+from ..services.mpt_optimization import optimize_portfolio
+from ..services.market_alerts import evaluate_market_alerts
+from ..services.derivatives_analysis import get_options_data
 router = APIRouter()
 
 @router.post("/research")
@@ -111,3 +113,61 @@ def get_portfolio_risk(portfolio_id: int, current_user: models.User = Depends(au
         raise HTTPException(status_code=400, detail="Could not calculate risk metrics. Does the portfolio have holdings?")
         
     return risk_metrics
+
+@router.post("/portfolio/optimize", response_model=schemas.MPTOptimizationResponse)
+def optimize_mpt(request: schemas.MPTOptimizationRequest, current_user: models.User = Depends(auth.get_current_user)):
+    """Optimize portfolio using Modern Portfolio Theory"""
+    result = optimize_portfolio(request.symbols)
+    if "error" in result:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
+
+@router.post("/alerts", response_model=schemas.AlertRuleResponse)
+def create_alert_rule(rule: schemas.AlertRuleCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    """Create a new market alert rule"""
+    new_rule = models.AlertRule(
+        user_id=current_user.id,
+        symbol=rule.symbol,
+        condition=rule.condition,
+        threshold_price=rule.threshold_price
+    )
+    db.add(new_rule)
+    db.commit()
+    db.refresh(new_rule)
+    return new_rule
+
+@router.get("/alerts", response_model=list[schemas.AlertRuleResponse])
+def get_alerts(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    """Get all alert rules for current user"""
+    return db.query(models.AlertRule).filter(models.AlertRule.user_id == current_user.id).all()
+
+@router.post("/alerts/evaluate")
+def evaluate_alerts(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    """Manually trigger alert evaluation"""
+    return evaluate_market_alerts(db)
+
+@router.get("/notifications", response_model=list[schemas.NotificationResponse])
+def get_notifications(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    """Get user notifications"""
+    return db.query(models.Notification).filter(models.Notification.user_id == current_user.id).order_by(models.Notification.created_at.desc()).all()
+
+@router.put("/notifications/{notification_id}/read")
+def mark_notification_read(notification_id: int, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    """Mark notification as read"""
+    notification = db.query(models.Notification).filter(models.Notification.id == notification_id, models.Notification.user_id == current_user.id).first()
+    if not notification:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Notification not found")
+    notification.is_read = True
+    db.commit()
+    return {"message": "Notification marked as read"}
+
+@router.get("/options/{symbol}", response_model=schemas.OptionsAnalysisResponse)
+def get_options(symbol: str, current_user: models.User = Depends(auth.get_current_user)):
+    """Get options chain analysis for a symbol"""
+    result = get_options_data(symbol)
+    if "error" in result:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result

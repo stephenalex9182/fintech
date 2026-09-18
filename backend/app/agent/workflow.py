@@ -1,6 +1,6 @@
 from langgraph.prebuilt import create_react_agent
 from langchain_openai import ChatOpenAI
-from .tools import fetch_stock_price, technical_analysis_tool, analyze_financial_sentiment
+from .tools import fetch_stock_price, technical_analysis_tool, analyze_financial_sentiment, fundamental_analysis_tool, options_analysis_tool
 from ..config import settings
 from fastapi import HTTPException
 
@@ -11,9 +11,21 @@ def get_agent():
         return None
         
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, api_key=settings.OPENAI_API_KEY)
-    tools = [fetch_stock_price, technical_analysis_tool, analyze_financial_sentiment]
+    tools = [fetch_stock_price, technical_analysis_tool, analyze_financial_sentiment, fundamental_analysis_tool, options_analysis_tool]
     
-    agent_executor = create_react_agent(llm, tools)
+    system_prompt = """You are a highly advanced Financial Research AI Agent. 
+    Your goal is to provide comprehensive, accurate, and structured financial reports.
+    When asked to research a stock or asset, utilize the tools available to you to gather:
+    1. Current Price and Basic Info
+    2. Fundamental Data (P/E, Growth, Debt, etc.)
+    3. Technical Indicators (RSI, Moving Averages)
+    4. Options Chain / Derivatives sentiment
+    5. News Sentiment
+    
+    Format your response in Markdown with clear headers for each section. Provide a final conclusive summary with an actionable insight based on the gathered data.
+    """
+    
+    agent_executor = create_react_agent(llm, tools, messages_modifier=system_prompt)
     return agent_executor
 
 def run_research_agent(query: str) -> str:

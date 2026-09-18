@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -57,6 +58,42 @@ class RiskAnalysisResponse(BaseModel):
     sharpe_ratio: float
     value_at_risk_95: float
     beta: float
+
+class NotificationResponse(BaseModel):
+    id: int
+    message: str
+    is_read: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class AlertRuleCreate(BaseModel):
+    symbol: str
+    condition: str
+    threshold_price: float
+
+class AlertRuleResponse(AlertRuleCreate):
+    id: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+class MPTOptimizationRequest(BaseModel):
+    symbols: List[str]
+
+class MPTOptimizationResponse(BaseModel):
+    optimal_weights: Dict[str, float]
+    expected_return: float
+    expected_volatility: float
+    sharpe_ratio: float
+
+class OptionsAnalysisResponse(BaseModel):
+    symbol: str
+    calls: List[Dict[str, Any]]
+    puts: List[Dict[str, Any]]
+    underlying_price: float
 
 class AgentQuery(BaseModel):
     query: str
